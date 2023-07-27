@@ -1,0 +1,35 @@
+{
+  "author": {
+    "email": "brianlambert@gmail.com",
+    "name": "Brian Lambert",
+    "url": "https://github.com/softwarenerd"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  },
+  "description": "ANSI escape sequence processing",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "homepage": "https://github.com/softwarenerd/ansi-output",
+  "keywords": [
+    "ansi",
+    ""
+  ],
+  "license": "MIT",
+  "main": "dist/ansi-output.js",
+  "name": "ansi-output-test",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:softwarenerd/ansi-output.git"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "type": "module",
+  "types": "dist/ansi-output.d.ts",
+  "version": "1.0.2"
+}
