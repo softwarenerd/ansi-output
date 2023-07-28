@@ -1367,7 +1367,7 @@ class SGRState implements ANSIFormat {
 	 * Gets the styles.
 	 */
 	public get styles() {
-		return !this._styles ? [] : [...this._styles];
+		return !this._styles ? undefined : [...this._styles];
 	}
 
 	/**
