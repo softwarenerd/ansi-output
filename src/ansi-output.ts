@@ -431,7 +431,7 @@ export class ANSIOutput {
 		}
 
 		// Adjust the output line.
-		this._outputLine = Math.max(this._outputLine - rangeParam(match[1], 1, 1, 1024), 0);
+		this._outputLine = Math.max(this._outputLine + rangeParam(match[1], 1, 1, 1024), 0);
 	}
 
 	/**

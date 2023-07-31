@@ -136,6 +136,19 @@ export const makeCUU = (count: number = 1) => {
 };
 
 /**
+ * Makes a CUD (Cursor Down) escape sequence.
+ * @param count The count.
+ * @returns The CUD escape sequence.
+ */
+export const makeCUD = (count: number = 1) => {
+	if (count === 1) {
+		return `${CSI}B`;
+	} else {
+		return `${CSI}${count}B`;
+	}
+};
+
+/**
  * Makes a CUF (Cursor Forward) escape sequence.
  * @param count The count.
  * @returns The CUF escape sequence.
