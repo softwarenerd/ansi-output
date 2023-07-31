@@ -5,8 +5,8 @@
 /**
  * Constants.
  */
-const ESC = '\x1b';
-const CSI = ESC + '[';
+export const ESC = '\x1b';
+export const CSI = ESC + '[';
 
 /**
  * SGR (Select Graphic Rendition).
@@ -127,8 +127,8 @@ export enum SGR {
  * @param count The count.
  * @returns The CUU escape sequence.
  */
-export const makeCUU = (count: number = 1) => {
-	if (count === 1) {
+export const makeCUU = (count?: number) => {
+	if (count === undefined) {
 		return `${CSI}A`;
 	} else {
 		return `${CSI}${count}A`;
@@ -140,8 +140,8 @@ export const makeCUU = (count: number = 1) => {
  * @param count The count.
  * @returns The CUD escape sequence.
  */
-export const makeCUD = (count: number = 1) => {
-	if (count === 1) {
+export const makeCUD = (count?: number) => {
+	if (count === undefined) {
 		return `${CSI}B`;
 	} else {
 		return `${CSI}${count}B`;
@@ -153,8 +153,8 @@ export const makeCUD = (count: number = 1) => {
  * @param count The count.
  * @returns The CUF escape sequence.
  */
-export const makeCUF = (count: number = 1) => {
-	if (count === 1) {
+export const makeCUF = (count?: number) => {
+	if (count === undefined) {
 		return `${CSI}C`;
 	} else {
 		return `${CSI}${count}C`;
@@ -166,8 +166,8 @@ export const makeCUF = (count: number = 1) => {
  * @param count The count.
  * @returns The CUB escape sequence.
  */
-export const makeCUB = (count: number = 1) => {
-	if (count === 1) {
+export const makeCUB = (count?: number) => {
+	if (count === undefined) {
 		return `${CSI}D`;
 	} else {
 		return `${CSI}${count}D`;
@@ -180,12 +180,12 @@ export const makeCUB = (count: number = 1) => {
  * @param column The column.
  * @returns The CUP escape sequence.
  */
-export const makeCUP = (line: number | undefined = undefined, column: number | undefined = undefined) => {
-	if (!line && !column) {
+export const makeCUP = (line?: number, column?: number) => {
+	if (line === undefined && column === undefined) {
 		return `${CSI}H`;
-	} else if (line && !column) {
+	} else if (line !== undefined && column === undefined) {
 		return `${CSI}${line}H`;
-	} else if (!line && column) {
+	} else if (line === undefined && column !== undefined) {
 		return `${CSI};${column}H`;
 	} else {
 		return `${CSI}${line};${column}H`;
@@ -194,13 +194,16 @@ export const makeCUP = (line: number | undefined = undefined, column: number | u
 
 /**
  * Makes an ED (Erase in Display) escape sequence.
- * @param count The count.
- * @returns The CUB escape sequence.
+ * @param direction The direction.
+ * @returns The ED escape sequence.
  */
-export const makeED = (direction: 'end-of-screen' | 'beginning-of-screen' | 'entire-screen' = 'end-of-screen') => {
+export const makeED = (direction: 'end-of-screen' | 'end-of-screen-explicit-0' | 'beginning-of-screen' | 'entire-screen' = 'end-of-screen') => {
 	switch (direction) {
 		case 'end-of-screen':
 			return `${CSI}J`;
+
+		case 'end-of-screen-explicit-0':
+			return `${CSI}0J`;
 
 		case 'beginning-of-screen':
 			return `${CSI}1J`;
@@ -215,10 +218,13 @@ export const makeED = (direction: 'end-of-screen' | 'beginning-of-screen' | 'ent
  * @param count The count.
  * @returns The EL escape sequence.
  */
-export const makeEL = (direction: 'end-of-line' | 'beginning-of-line' | 'entire-line' = 'end-of-line') => {
+export const makeEL = (direction: 'end-of-line' | 'end-of-line-explicit-0' | 'beginning-of-line' | 'entire-line' = 'end-of-line') => {
 	switch (direction) {
 		case 'end-of-line':
 			return `${CSI}K`;
+
+		case 'end-of-line-explicit-0':
+			return `${CSI}0K`;
 
 		case 'beginning-of-line':
 			return `${CSI}1K`;

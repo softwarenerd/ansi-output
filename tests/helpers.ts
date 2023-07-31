@@ -2,6 +2,7 @@
  *  Copyright (C) 2022 Posit Software, PBC. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
+import { CRLF, TEST_ZEROS } from "./constants";
 import { ANSIOutput } from "../src/ansi-output";
 
 /**
@@ -67,3 +68,19 @@ export const setOutputPosition = (ansiOutput: ANSIOutput, outputLine: number, ou
     setOutputLine(ansiOutput, outputLine);
     setOutputColumn(ansiOutput, outputColumn);
 };
+
+/**
+ * Sets up an ANSIOutput with a standard screen of content.
+ * @returns The newly set up ANSIOutput.
+ */
+export const setupStandardScreen = () => {
+    const ansiOutput = new ANSIOutput();
+    for (let i = 0; i < 25; i++) {
+        ansiOutput.processOutput(TEST_ZEROS);
+        if (i < 24) {
+            ansiOutput.processOutput(CRLF);
+        }
+    }
+
+    return ansiOutput;
+}

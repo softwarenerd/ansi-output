@@ -412,12 +412,9 @@ export class ANSIOutput {
 	private processCUU() {
 		// Match the control sequence.
 		const match = this._controlSequence.match(/^([0-9]*)A$/);
-		if (!match) {
-			return;
+		if (match) {
+			this._outputLine = Math.max(this._outputLine - rangeParam(match[1], 1, 1), 0);
 		}
-
-		// Adjust the output line.
-		this._outputLine = Math.max(this._outputLine - rangeParam(match[1], 1, 1, 1024), 0);
 	}
 
 	/**
@@ -426,12 +423,9 @@ export class ANSIOutput {
 	private processCUD() {
 		// Match the control sequence.
 		const match = this._controlSequence.match(/^([0-9]*)B$/);
-		if (!match) {
-			return;
+		if (match) {
+			this._outputLine = this._outputLine + rangeParam(match[1], 1, 1);
 		}
-
-		// Adjust the output line.
-		this._outputLine = Math.max(this._outputLine + rangeParam(match[1], 1, 1, 1024), 0);
 	}
 
 	/**
@@ -440,12 +434,9 @@ export class ANSIOutput {
 	private processCUF() {
 		// Match the control sequence.
 		const match = this._controlSequence.match(/^([0-9]*)C$/);
-		if (!match) {
-			return;
+		if (match) {
+			this._outputColumn = this._outputColumn + rangeParam(match[1], 1, 1);
 		}
-
-		// Adjust the output column.
-		this._outputColumn += rangeParam(match[1], 1, 1, 1024);
 	}
 
 	/**
@@ -454,12 +445,9 @@ export class ANSIOutput {
 	private processCUB() {
 		// Match the control sequence.
 		const match = this._controlSequence.match(/^([0-9]*)D$/);
-		if (!match) {
-			return;
+		if (match) {
+			this._outputColumn = Math.max(this._outputColumn - rangeParam(match[1], 1, 1), 0);
 		}
-
-		// Adjust the output column.
-		this._outputColumn = Math.max(this._outputColumn - rangeParam(match[1], 1, 1, 1024), 0);
 	}
 
 	/**
@@ -468,13 +456,10 @@ export class ANSIOutput {
 	private processCUP() {
 		// Match the control sequence.
 		const match = this._controlSequence.match(/^([0-9]*)(?:;?([0-9]*))H$/);
-		if (!match) {
-			return;
+		if (match) {
+			this._outputLine = rangeParam(match[1], 1, 1) - 1
+			this._outputColumn = rangeParam(match[2], 1, 1) - 1;
 		}
-
-		// Set the output line and output column.
-		this._outputLine = this.rangeParam(match[1], 1, 1, 1024) - 1;
-		this._outputColumn = this.rangeParam(match[2], 1, 1, 1024) - 1;
 	}
 
 	/**
@@ -483,34 +468,32 @@ export class ANSIOutput {
 	private processED() {
 		// Match the control sequence.
 		const match = this._controlSequence.match(/^([0-9]*)J$/);
-		if (!match) {
-			return;
-		}
+		if (match) {
+			// Process the parameter.
+			switch (getParam(match[1], 0)) {
+				// Clear from cursor to the end of the screen.
+				case 0:
+					this._outputLines[this._outputLine].clearToEndOfLine(this._outputColumn);
+					for (let i = this._outputLine + 1; i < this._outputLines.length; i++) {
+						this._outputLines[i].clearEntireLine();
+					}
+					break;
 
-		// Process the parameter.
-		switch (this.getParam(match[1], 0)) {
-			// Clear from cursor to the end of the screen.
-			case 0:
-				this._outputLines[this._outputLine].clearToEndOfLine(this._outputColumn);
-				for (let i = this._outputLine + 1; i < this._outputLines.length; i++) {
-					this._outputLines[i].clearEntireLine();
-				}
-				break;
+				// Clear from cursor to the beginning of the screen.
+				case 1:
+					this._outputLines[this._outputLine].clearToBeginningOfLine(this._outputColumn);
+					for (let i = 0; i < this._outputLine; i++) {
+						this._outputLines[i].clearEntireLine();
+					}
+					break;
 
-			// Clear from cursor to the beginning of the screen.
-			case 1:
-				this._outputLines[this._outputLine].clearToBeginningOfLine(this._outputColumn);
-				for (let i = 0; i < this._outputLine; i++) {
-					this._outputLines[i].clearEntireLine();
-				}
-				break;
-
-			// Clear the entire screen.
-			case 2:
-				for (let i = 0; i < this._outputLines.length; i++) {
-					this._outputLines[i].clearEntireLine();
-				}
-				break;
+				// Clear the entire screen.
+				case 2:
+					for (let i = 0; i < this._outputLines.length; i++) {
+						this._outputLines[i].clearEntireLine();
+					}
+					break;
+			}
 		}
 	}
 
@@ -520,29 +503,27 @@ export class ANSIOutput {
 	private processEL() {
 		// Match the control sequence.
 		const match = this._controlSequence.match(/^([0-9]*)K$/);
-		if (!match) {
-			return;
-		}
+		if (match) {
+			// Get the output line.
+			const outputLine = this._outputLines[this._outputLine];
 
-		// Get the output line.
-		const outputLine = this._outputLines[this._outputLine];
+			// Process the parameter.
+			switch (getParam(match[1], 0)) {
+				// Clear from cursor to the end of the line.
+				case 0:
+					outputLine.clearToEndOfLine(this._outputColumn);
+					break;
 
-		// Process the parameter.
-		switch (this.getParam(match[1], 0)) {
-			// Clear from cursor to the end of the line.
-			case 0:
-				outputLine.clearToEndOfLine(this._outputColumn);
-				break;
+				// Clear from cursor to the beginning of the line.
+				case 1:
+					outputLine.clearToBeginningOfLine(this._outputColumn);
+					break;
 
-			// Clear from cursor to the beginning of the line.
-			case 1:
-				outputLine.clearToBeginningOfLine(this._outputColumn);
-				break;
-
-			// Clear the entire line.
-			case 2:
-				outputLine.clearEntireLine();
-				break;
+				// Clear the entire line.
+				case 2:
+					outputLine.clearEntireLine();
+					break;
+			}
 		}
 	}
 
@@ -999,29 +980,6 @@ export class ANSIOutput {
 		}
 	}
 
-	/**
-	 * Gets and ranges a parameter value.
-	 * @param value The value.
-	 * @param defaultValue The default value.
-	 * @param minValue The minimum value.
-	 * @param maxValue The maximum value.
-	 * @returns The ranged parameter value.
-	 */
-	private rangeParam(value: string, defaultValue: number, minValue: number, maxValue: number) {
-		const param = this.getParam(value, defaultValue);
-		return Math.min(Math.max(param, minValue), maxValue);
-	}
-
-	/**
-	 * Gets a parameter value.
-	 * @param value The value.
-	 * @param defaultValue The default value.
-	 * @returns The parameter value.
-	 */
-	private getParam(value: string, defaultValue: number) {
-		const param = parseInt(value);
-		return Number.isNaN(param) ? defaultValue : param;
-	}
 
 	//#endregion Private Methods
 }
@@ -1517,7 +1475,7 @@ class OutputLine implements ANSIOutputLine {
 
 		// If the left output run wasn't found, there's an egregious bug in this code. Just return
 		// in this case. (There's a bit of a TypeScript failure here. It doesn't detect that both
-		// leftOutputRun and leftOutputRunIndex will undefined if one of them is undefined.)
+		// leftOutputRun and leftOutputRunIndex will both be undefined if one of them is undefined.)
 		if (leftOutputRun === undefined || leftOutputRunIndex === undefined) {
 			return;
 		}
@@ -1935,13 +1893,27 @@ class OutputRun implements ANSIOutputRun {
 
 //#region Helper Functions
 
-const rangeParam = (value: string, defaultValue: number, minValue: number, maxValue: number) => {
+/**
+ * Gets and ranges a parameter value.
+ * @param value The value.
+ * @param defaultValue The default value.
+ * @param minValue The minimum value.
+ * @returns The ranged parameter value.
+ */
+const rangeParam = (value: string, defaultValue: number, minValue: number) => {
+	const param = getParam(value, defaultValue);
+	return Math.max(param, minValue);
+};
+
+/**
+ * Gets a parameter value.
+ * @param value The value.
+ * @param defaultValue The default value.
+ * @returns The parameter value.
+ */
+const getParam = (value: string, defaultValue: number) => {
 	const param = parseInt(value);
-	if (Number.isNaN(param)) {
-		return defaultValue;
-	} else {
-		return Math.min(Math.max(param, minValue), maxValue);
-	}
+	return Number.isNaN(param) ? defaultValue : param;
 };
 
 /**
