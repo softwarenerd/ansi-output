@@ -482,7 +482,9 @@ test("Tests ANSI 256 matrix", () => {
 test("Tests insertion of blue text into an output run of red text", () => {
     // Setup.
     const ansiOutput = new ANSIOutput();
+    // Create a red output run.
     ansiOutput.processOutput(`${makeSGR(SGRParam.ForegroundRed)}${TEST_ZEROS}${makeSGR()}`);
+    // Insert a blue output in the middle of the red output run.
     ansiOutput.processOutput(makeCUB(45));
     ansiOutput.processOutput(`${makeSGR(SGRParam.ForegroundBlue)}XXXXXXXXXX${makeSGR()}`);
     const outputLines = ansiOutput.outputLines;

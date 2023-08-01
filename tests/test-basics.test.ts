@@ -12,6 +12,7 @@ test("Tests the static processOutput method", () => {
 
     // Tests.
     expect(outputLines.length).toBe(1);
+    expect(outputLines[0].id.length).toBe(16);
     expect(outputLines[0].outputRuns.length).toBe(1);
     expect(outputLines[0].outputRuns[0].text).toBe(PANGRAM);
 });
