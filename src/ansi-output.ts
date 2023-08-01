@@ -1614,12 +1614,15 @@ class OutputLine implements ANSIOutputLine {
 				}
 			}
 
-			// Append a neutral output run for the spacer and an output run for the text being
-			// inserted. The spacer must be neutral because text for it has not been set using any
-			// SGR state.
-			this._outputRuns.push(new OutputRun(spacer));
-			this._outputRuns.push(new OutputRun(text, sgrState));
-			return;
+			if (!sgrState) {
+				this._outputRuns.push(new OutputRun(spacer + text));
+			} else {
+				// Append a neutral output run for the spacer and an output run for the text being
+				// inserted. The spacer must be neutral because text for it has not been set using any
+				// SGR state.
+				this._outputRuns.push(new OutputRun(spacer));
+				this._outputRuns.push(new OutputRun(text, sgrState));
+			}
 		}
 
 		// Find the left output run that is impacted by the insertion.
@@ -1733,7 +1736,9 @@ class OutputLine implements ANSIOutputLine {
 		);
 
 		// Optimize the output runs.
-		this._outputRuns = OutputRun.optimizeOutputRuns(this._outputRuns);
+		if (this._outputRuns.length > 1) {
+			this._outputRuns = OutputRun.optimizeOutputRuns(this._outputRuns);
+		}
 
 		// Recalculate the total length.
 		this._totalLength = this._outputRuns.reduce((totalLength, outputRun) =>
@@ -1817,24 +1822,20 @@ class OutputRun implements ANSIOutputRun {
 	 * @returns The optimized output runs.
 	 */
 	public static optimizeOutputRuns(outputRunsIn: OutputRun[]) {
-		if (outputRunsIn.length < 2) {
-			return outputRunsIn;
-		} else {
-			// Build the optimized output runs by combining adjacent output runs with equivalent
-			// SGR states.
-			const outputRunsOut = [outputRunsIn[0]];
-			for (let i = 1, o = 0; i < outputRunsIn.length; i++) {
-				const outputRun = outputRunsIn[i];
-				if (SGRState.equivalent(outputRunsOut[o].sgrState, outputRun.sgrState)) {
-					outputRunsOut[o]._text += outputRun.text;
-				} else {
-					outputRunsOut[++o] = outputRun;
-				}
+		// Build the optimized output runs by combining adjacent output runs with equivalent
+		// SGR states.
+		const outputRunsOut = [outputRunsIn[0]];
+		for (let i = 1, o = 0; i < outputRunsIn.length; i++) {
+			const outputRun = outputRunsIn[i];
+			if (SGRState.equivalent(outputRunsOut[o].sgrState, outputRun.sgrState)) {
+				outputRunsOut[o]._text += outputRun.text;
+			} else {
+				outputRunsOut[++o] = outputRun;
 			}
-
-			// Return the optimized output runs.
-			return outputRunsOut;
 		}
+
+		// Return the optimized output runs.
+		return outputRunsOut;
 	}
 
 	/**
@@ -1843,22 +1844,6 @@ class OutputRun implements ANSIOutputRun {
 	 */
 	appendText(text: string) {
 		this._text += text;
-	}
-
-	/**
-	 * Inserts text into the output run.
-	 * @param text the text to insert.
-	 */
-	insert(text: string, offset: number) {
-		// Churn the identifier.
-		this._id = generateId();
-
-		// Make a hole for the text being inserted.
-		const leftText = this.text.slice(0, offset);
-		const rightText = this.text.slice(offset + text.length);
-
-		// Insert the text being inserted.
-		this._text = leftText + text + rightText;
 	}
 
 	//#endregion Public Methods
@@ -1922,15 +1907,8 @@ const getParam = (value: string, defaultValue: number) => {
  * @returns A two digit hex string representing the value.
  */
 const twoDigitHex = (value: number) => {
-	// Sanity check the value.
-	if (value < 0) {
-		return '00';
-	} else if (value > 255) {
-		return 'ff';
-	}
-
 	// Return the value in hex format.
-	const hex = value.toString(16);
+	const hex = Math.max(Math.min(255, value), 0).toString(16);
 	return hex.length === 2 ? hex : '0' + hex;
 };
 

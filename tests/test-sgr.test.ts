@@ -2,9 +2,10 @@
  *  Copyright (C) 2023 Brian Lambert. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import { SGRParam, SGRParamColor, makeSGR } from "./ansi";
-import { PANGRAM } from "./constants";
-import { ANSIColor, ANSIFormat, ANSIOutput } from "../src/ansi-output";
+import { SGRParam, SGRParamColor, makeCUB, makeSGR } from "./ansi";
+import { PANGRAM, TEST_ZEROS } from "./constants";
+import { ANSIColor, ANSIFormat, ANSIOutput, ANSIStyle } from "../src/ansi-output";
+import { map8BitColorIndexToColor, testStyle } from "./helpers";
 
 /**
  * SGRValue type.
@@ -433,7 +434,7 @@ test("Tests ANSI 16 matrix", () => {
     }
 });
 
-test("", () => {
+test("Tests ANSI 256 matrix", () => {
     const testScenarios: SGRTestScenario[] = [];
     for (let foregroundIndex = 0; foregroundIndex < 256; foregroundIndex++) {
         for (let backgroundIndex = 0; backgroundIndex < 256; backgroundIndex++) {
@@ -478,117 +479,82 @@ test("", () => {
     }
 });
 
-/**
- * Maps an 8-bit color index to an ANSIColor or RGB color value.
- * @param colorIndex The 8-bit color index.
- * @returns An ANSIColor or RGB color value.
- */
-const map8BitColorIndexToColor = (colorIndex: number) => {
-    // Process the color index. The first 16 indexes map to normal ANSIColors.
-    switch (colorIndex) {
-        case 0:
-            return ANSIColor.Black;
+test("Tests insertion of blue text into an output run of red text", () => {
+    // Setup.
+    const ansiOutput = new ANSIOutput();
+    ansiOutput.processOutput(`${makeSGR(SGRParam.ForegroundRed)}${TEST_ZEROS}${makeSGR()}`);
+    ansiOutput.processOutput(makeCUB(45));
+    ansiOutput.processOutput(`${makeSGR(SGRParam.ForegroundBlue)}XXXXXXXXXX${makeSGR()}`);
+    const outputLines = ansiOutput.outputLines;
 
-        case 1:
-            return ANSIColor.Red;
+    // Test.
+    expect(outputLines.length).toBe(1);
+    expect(outputLines[0].outputRuns.length).toBe(3);
 
-        case 2:
-            return ANSIColor.Green;
+    // First red segment.
+    expect(outputLines[0].outputRuns[0].id.length).toBe(16);
+    expect(outputLines[0].outputRuns[0].format).toBeDefined();
+    expect(outputLines[0].outputRuns[0].format!.styles).toBeUndefined();
+    expect(outputLines[0].outputRuns[0].format!.foregroundColor).toBe(ANSIColor.Red);
+    expect(outputLines[0].outputRuns[0].format!.backgroundColor).toBeUndefined();
+    expect(outputLines[0].outputRuns[0].format!.underlinedColor).toBeUndefined();
+    expect(outputLines[0].outputRuns[0].format!.font).toBeUndefined();
+    expect(outputLines[0].outputRuns[0].text).toBe("00000000000000000000000000000000000");
 
-        case 3:
-            return ANSIColor.Yellow;
+    // Inserted blue segment.
+    expect(outputLines[0].outputRuns[1].id.length).toBe(16);
+    expect(outputLines[0].outputRuns[1].format).toBeDefined();
+    expect(outputLines[0].outputRuns[1].format!.styles).toBeUndefined();
+    expect(outputLines[0].outputRuns[1].format!.foregroundColor).toBe(ANSIColor.Blue);
+    expect(outputLines[0].outputRuns[1].format!.backgroundColor).toBeUndefined();
+    expect(outputLines[0].outputRuns[1].format!.underlinedColor).toBeUndefined();
+    expect(outputLines[0].outputRuns[1].format!.font).toBeUndefined();
+    expect(outputLines[0].outputRuns[1].text).toBe("XXXXXXXXXX");
 
-        case 4:
-            return ANSIColor.Blue;
+    // Second red segment.
+    expect(outputLines[0].outputRuns[2].id.length).toBe(16);
+    expect(outputLines[0].outputRuns[2].format).toBeDefined();
+    expect(outputLines[0].outputRuns[2].format!.styles).toBeUndefined();
+    expect(outputLines[0].outputRuns[2].format!.foregroundColor).toBe(ANSIColor.Red);
+    expect(outputLines[0].outputRuns[2].format!.backgroundColor).toBeUndefined();
+    expect(outputLines[0].outputRuns[2].format!.underlinedColor).toBeUndefined();
+    expect(outputLines[0].outputRuns[2].format!.font).toBeUndefined();
+    expect(outputLines[0].outputRuns[2].text).toBe("00000000000000000000000000000000000");
+});
 
-        case 5:
-            return ANSIColor.Magenta;
+// export enum ANSIStyle {
+// 	Bold = 'ansiBold',
+// 	Dim = 'ansiDim',
+// 	Italic = 'ansiItalic',
+// 	Underlined = 'ansiUnderlined',
+// 	SlowBlink = 'ansiSlowBlink',
+// 	RapidBlink = 'ansiRapidBlink',
+// 	Hidden = 'ansiHidden',
+// 	CrossedOut = 'ansiCrossedOut',
+// 	Fraktur = 'ansiFraktur',
+// 	DoubleUnderlined = 'ansiDoubleUnderlined',
+// 	Framed = 'ansiFramed',
+// 	Encircled = 'ansiEncircled',
+// 	Overlined = 'ansiOverlined',
+// 	Superscript = 'ansiSuperscript',
+// 	Subscript = 'ansiSubscript'
+// }
 
-        case 6:
-            return ANSIColor.Cyan;
-
-        case 7:
-            return ANSIColor.White;
-
-        case 8:
-            return ANSIColor.BrightBlack;
-
-        case 9:
-            return ANSIColor.BrightRed;
-
-        case 10:
-            return ANSIColor.BrightGreen;
-
-        case 11:
-            return ANSIColor.BrightYellow;
-
-        case 12:
-            return ANSIColor.BrightBlue;
-
-        case 13:
-            return ANSIColor.BrightMagenta;
-
-        case 14:
-            return ANSIColor.BrightCyan;
-
-        case 15:
-            return ANSIColor.BrightWhite;
-
-        // Process other color indexes.
-        default:
-            // Sanity check that the color index is an integer.
-            if (colorIndex % 1 !== 0) {
-                return undefined;
-            }
-
-            // Process the color index as RGB or grayscale.
-            if (colorIndex >= 16 && colorIndex <= 231) {
-                // Convert the color index to one of 216 RGB colors.
-                let colorNumber = colorIndex - 16;
-                let blue = colorNumber % 6;
-                colorNumber = (colorNumber - blue) / 6;
-                let green = colorNumber % 6;
-                colorNumber = (colorNumber - green) / 6;
-                let red = colorNumber;
-
-                // Map red, green, and blue from 0-5 to 0-255.
-                blue = Math.round(blue * 255 / 5);
-                green = Math.round(green * 255 / 5);
-                red = Math.round(red * 255 / 5);
-
-                // Return the RGB color.
-                return '#' +
-                    twoDigitHex(red) +
-                    twoDigitHex(green) +
-                    twoDigitHex(blue);
-            } else if (colorIndex >= 232 && colorIndex <= 255) {
-                // Calculate the grayscale value.
-                const rgb = Math.round((colorIndex - 232) / 23 * 255);
-                const grayscale = twoDigitHex(rgb);
-
-                // Return the RGB color.
-                return '#' + grayscale + grayscale + grayscale;
-            } else {
-                // Wonky!
-                return undefined;
-            }
-    }
-}
-
-/**
- * Converts a number to a two-digit hex string representing the value.
- * @param value The value.
- * @returns A two digit hex string representing the value.
- */
-const twoDigitHex = (value: number) => {
-    // Sanity check the value.
-    if (value < 0) {
-        return '00';
-    } else if (value > 255) {
-        return 'ff';
-    }
-
-    // Return the value in hex format.
-    const hex = value.toString(16);
-    return hex.length === 2 ? hex : '0' + hex;
-};
+test("Tests styles", () => {
+    testStyle(SGRParam.Bold, ANSIStyle.Bold);
+    testStyle(SGRParam.Dim, ANSIStyle.Dim);
+    testStyle(SGRParam.Italic, ANSIStyle.Italic);
+    testStyle(SGRParam.Underlined, ANSIStyle.Underlined);
+    testStyle(SGRParam.SlowBlink, ANSIStyle.SlowBlink);
+    testStyle(SGRParam.RapidBlink, ANSIStyle.RapidBlink);
+    testStyle(SGRParam.Hidden, ANSIStyle.Hidden);
+    testStyle(SGRParam.CrossedOut, ANSIStyle.CrossedOut);
+    testStyle(SGRParam.Fraktur, ANSIStyle.Fraktur);
+    testStyle(SGRParam.DoubleUnderlined, ANSIStyle.DoubleUnderlined);
+    // These styles are not implemented yet.
+    // testStyle(SGRParam.Framed, ANSIStyle.Framed);
+    // testStyle(SGRParam.Encircled, ANSIStyle.Encircled);
+    // testStyle(SGRParam.Overlined, ANSIStyle.Overlined);
+    // testStyle(SGRParam.Superscript, ANSIStyle.Superscript);
+    // testStyle(SGRParam.Subscript, ANSIStyle.Subscript);
+});

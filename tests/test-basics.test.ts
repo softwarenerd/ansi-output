@@ -3,7 +3,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ANSIOutput } from "../src/ansi-output";
-import { CRLF, LF, PANGRAM } from "./constants";
+import { makeCUB, makeCUF } from "./ansi";
+import { CRLF, LF, PANGRAM, TEST_ZEROS } from "./constants";
 
 test("Tests the static processOutput method", () => {
     // Setup.
@@ -90,4 +91,82 @@ test("Tests 2,500 output lines", () => {
         expect(outputLines[i].outputRuns[0].format).toBe(undefined);
         expect(outputLines[i].outputRuns[0].text).toBe(PANGRAM);
     }
+});
+
+test("Tests overwrite at beginning of output run", () => {
+    // Setup.
+    const ansiOutput = new ANSIOutput();
+    ansiOutput.processOutput(TEST_ZEROS);
+    ansiOutput.processOutput(makeCUB(80));
+    ansiOutput.processOutput("XXXXXXXXXX");
+    const outputLines = ansiOutput.outputLines;
+
+    // Test.
+    expect(outputLines.length).toBe(1);
+    expect(outputLines[0].outputRuns.length).toBe(1);
+    expect(outputLines[0].outputRuns[0].id.length).toBe(16);
+    expect(outputLines[0].outputRuns[0].format).toBe(undefined);
+    expect(outputLines[0].outputRuns[0].text).toBe("XXXXXXXXXX0000000000000000000000000000000000000000000000000000000000000000000000");
+});
+
+test("Tests overwrite into middle of output run", () => {
+    // Setup.
+    const ansiOutput = new ANSIOutput();
+    ansiOutput.processOutput(TEST_ZEROS);
+    ansiOutput.processOutput(makeCUB(45));
+    ansiOutput.processOutput("XXXXXXXXXX");
+    const outputLines = ansiOutput.outputLines;
+
+    // Test.
+    expect(outputLines.length).toBe(1);
+    expect(outputLines[0].outputRuns.length).toBe(1);
+    expect(outputLines[0].outputRuns[0].id.length).toBe(16);
+    expect(outputLines[0].outputRuns[0].format).toBe(undefined);
+    expect(outputLines[0].outputRuns[0].text).toBe("00000000000000000000000000000000000XXXXXXXXXX00000000000000000000000000000000000");
+});
+
+test("Tests overwrite at end of output run", () => {
+    // Setup.
+    const ansiOutput = new ANSIOutput();
+    ansiOutput.processOutput(TEST_ZEROS);
+    ansiOutput.processOutput(makeCUB(10));
+    ansiOutput.processOutput("XXXXXXXXXX");
+    const outputLines = ansiOutput.outputLines;
+
+    // Test.
+    expect(outputLines.length).toBe(1);
+    expect(outputLines[0].outputRuns.length).toBe(1);
+    expect(outputLines[0].outputRuns[0].id.length).toBe(16);
+    expect(outputLines[0].outputRuns[0].format).toBe(undefined);
+    expect(outputLines[0].outputRuns[0].text).toBe("0000000000000000000000000000000000000000000000000000000000000000000000XXXXXXXXXX");
+});
+
+test("Tests append at end of output run", () => {
+    // Setup.
+    const ansiOutput = new ANSIOutput();
+    ansiOutput.processOutput("XXXXXXXXXX");
+    ansiOutput.processOutput("XXXXXXXXXX");
+    const outputLines = ansiOutput.outputLines;
+
+    // Test.
+    expect(outputLines.length).toBe(1);
+    expect(outputLines[0].outputRuns.length).toBe(1);
+    expect(outputLines[0].outputRuns[0].id.length).toBe(16);
+    expect(outputLines[0].outputRuns[0].format).toBeUndefined();
+    expect(outputLines[0].outputRuns[0].text).toBe("XXXXXXXXXXXXXXXXXXXX");
+});
+
+test("Tests spacer", () => {
+    // Setup.
+    const ansiOutput = new ANSIOutput();
+    ansiOutput.processOutput(makeCUF(10));
+    ansiOutput.processOutput("XXXXXXXXXX");
+    const outputLines = ansiOutput.outputLines;
+
+    // Test.
+    expect(outputLines.length).toBe(1);
+    expect(outputLines[0].outputRuns.length).toBe(1);
+    expect(outputLines[0].outputRuns[0].id.length).toBe(16);
+    expect(outputLines[0].outputRuns[0].format).toBeUndefined();
+    expect(outputLines[0].outputRuns[0].text).toBe("          XXXXXXXXXX");
 });
