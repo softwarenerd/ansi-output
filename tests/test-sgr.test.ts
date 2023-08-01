@@ -522,24 +522,6 @@ test("Tests insertion of blue text into an output run of red text", () => {
     expect(outputLines[0].outputRuns[2].text).toBe("00000000000000000000000000000000000");
 });
 
-// export enum ANSIStyle {
-// 	Bold = 'ansiBold',
-// 	Dim = 'ansiDim',
-// 	Italic = 'ansiItalic',
-// 	Underlined = 'ansiUnderlined',
-// 	SlowBlink = 'ansiSlowBlink',
-// 	RapidBlink = 'ansiRapidBlink',
-// 	Hidden = 'ansiHidden',
-// 	CrossedOut = 'ansiCrossedOut',
-// 	Fraktur = 'ansiFraktur',
-// 	DoubleUnderlined = 'ansiDoubleUnderlined',
-// 	Framed = 'ansiFramed',
-// 	Encircled = 'ansiEncircled',
-// 	Overlined = 'ansiOverlined',
-// 	Superscript = 'ansiSuperscript',
-// 	Subscript = 'ansiSubscript'
-// }
-
 test("Tests styles", () => {
     testStyle(SGRParam.Bold, ANSIStyle.Bold);
     testStyle(SGRParam.Dim, ANSIStyle.Dim);
