@@ -11,7 +11,7 @@ export const CSI = ESC + '[';
 /**
  * SGR (Select Graphic Rendition).
  */
-export enum SGR {
+export enum SGRParam {
 	Reset = 0,
 	Bold = 1,
 	Dim = 2,
@@ -120,6 +120,14 @@ export enum SGR {
 	BackgroundBrightMagenta = 105,
 	BackgroundBrightCyan = 106,
 	BackgroundBrightWhite = 107
+}
+
+/**
+ * SGRParamColor enumeration.
+ */
+export enum SGRParamColor {
+	Color256 = 5,
+	ColorRGB = 2
 }
 
 /**
@@ -235,10 +243,10 @@ export const makeEL = (direction: 'end-of-line' | 'end-of-line-explicit-0' | 'be
 };
 
 /**
- * Makes an SGR (Select Graphic Rendition) escape sequence.
+ * Makes an SGR (Select Graphic Rendition) escape sequence from standard SGR parameters.
  * @param parameters The SGR parameters.
  * @returns The SGR escape sequence.
  */
-export const makeSGR = (...parameters: number[]): string => {
+export const makeSGR = (...parameters: SGRParam[]) => {
 	return CSI + parameters.map(parameter => `${parameter}`).join(';') + 'm';
 };

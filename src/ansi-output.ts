@@ -628,7 +628,7 @@ export class ANSIOutput {
 								return ANSIColor.BrightMagenta;
 
 							case SGRParamIndexedColor.BrightCyan:
-								return ANSIColor.Cyan;
+								return ANSIColor.BrightCyan;
 
 							case SGRParamIndexedColor.BrightWhite:
 								return ANSIColor.BrightWhite;
