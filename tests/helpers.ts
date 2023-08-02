@@ -11,7 +11,7 @@ import { SGRParam, makeSGR } from "./ansi";
  * @param value The value.
  * @returns A two digit hex string representing the value.
  */
-const twoDigitHex = (value: number) => {
+export const twoDigitHex = (value: number) => {
     // Sanity check the value.
     if (value < 0) {
         return '00';

@@ -5,7 +5,7 @@
 import { SGRParam, SGRParamColor, makeCUB, makeSGR } from "./ansi";
 import { PANGRAM, TEST_ZEROS } from "./constants";
 import { ANSIColor, ANSIFormat, ANSIOutput, ANSIStyle } from "../src/ansi-output";
-import { map8BitColorIndexToColor, testStyle } from "./helpers";
+import { map8BitColorIndexToColor, testStyle, twoDigitHex } from "./helpers";
 
 /**
  * SGRValue type.
@@ -453,6 +453,55 @@ test("Tests ANSI 256 matrix", () => {
                 }
             })
         }
+    }
+
+    // Run the test scenarios.
+    for (const testScenario of testScenarios) {
+        // Setup.
+        const ansiOutput = new ANSIOutput();
+        ansiOutput.processOutput(`${makeSGR(...testScenario.sgr)}${PANGRAM}${makeSGR()}`);
+        const outputLines = ansiOutput.outputLines;
+
+        // Tests that there's one output line and one output run in it.
+        expect(outputLines.length).toBe(1);
+        expect(outputLines[0].outputRuns.length).toBe(1);
+
+        // Test that the output run text is correct.
+        expect(outputLines[0].outputRuns[0].text).toBe(PANGRAM);
+
+        // Test that the output format is correct.
+        expect(outputLines[0].outputRuns[0].format).toBeDefined();
+        expect(outputLines[0].outputRuns[0].format!.styles).toBe(testScenario.ansiFormat.styles);
+        expect(outputLines[0].outputRuns[0].format!.foregroundColor).toBe(testScenario.ansiFormat.foregroundColor);
+        expect(outputLines[0].outputRuns[0].format!.backgroundColor).toBe(testScenario.ansiFormat.backgroundColor);
+        expect(outputLines[0].outputRuns[0].format!.underlinedColor).toBe(testScenario.ansiFormat.underlinedColor);
+        expect(outputLines[0].outputRuns[0].format!.font).toBe(testScenario.ansiFormat.font);
+    }
+});
+
+test("Tests ANSI RGB matrix", () => {
+    const testScenarios: SGRTestScenario[] = [];
+    for (let r = 0; r < 256; r++) {
+        for (let g = 0; g < 256; g++) {
+            testScenarios.push({
+                sgr: [
+                    SGRParam.SetForeground,
+                    SGRParamColor.ColorRGB,
+                    r,
+                    g,
+                    128,
+                    SGRParam.SetBackground,
+                    SGRParamColor.ColorRGB,
+                    r,
+                    g,
+                    128,
+                ],
+                ansiFormat: {
+                    foregroundColor: `#${twoDigitHex(r)}${twoDigitHex(g)}${twoDigitHex(128)}`,
+                    backgroundColor: `#${twoDigitHex(r)}${twoDigitHex(g)}${twoDigitHex(128)}`
+                }
+            })            
+        }    
     }
 
     // Run the test scenarios.
